@@ -29,6 +29,8 @@ class MyApp extends App {
   render() {
     const { Component, pageProps } = this.props;
 
+    // console.log(pageProps);
+
     return (
       <ThemeProvider theme={theme}>
         {/* ThemeProvider makes the theme available down the React tree thanks to React context. */}
