@@ -6,6 +6,7 @@ const mongoSessionStore = require('connect-mongo');
 
 const logger = require('./logs');
 const auth = require('./google');
+const api = require('./api');
 const { insertTemplates } = require('./models/EmailTemplate');
 
 require('dotenv').config();
@@ -27,6 +28,10 @@ const ROOT_URL = `http://localhost:${port}`;
 
 const app = next({ dev });
 const handle = app.getRequestHandler();
+
+const URL_MAP = {
+  '/login': '/public/login',
+};
 
 app.prepare().then(async () => {
   const server = express();
@@ -51,8 +56,16 @@ app.prepare().then(async () => {
   server.use(session(sess));
   await insertTemplates();
   auth({ server, ROOT_URL });
+  api(server);
 
-  server.get('*', (req, res) => handle(req, res));
+  server.get('*', (req, res) => {
+    const url = URL_MAP[req.path];
+    if (url) {
+      app.render(req, res, url);
+    } else {
+      handle(req, res);
+    }
+  });
 
   server.listen(port, (err) => {
     if (err) throw err;
