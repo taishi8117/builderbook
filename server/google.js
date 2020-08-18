@@ -76,7 +76,7 @@ function auth({ ROOT_URL, server }) {
     passport.authenticate('google', { failureRedirect: '/login' }),
     (req, res) => {
       // 2. if successful, redirect user to Index page (`/`)
-      res.redirect('/');
+      res.redirect('/admin');
     },
   );
 

@@ -1,6 +1,7 @@
+/* eslint-disable no-use-before-define */
 const mongoose = require('mongoose');
 
-const Book = require('./Book');
+// const Book = require('./Book');
 
 const { Schema } = mongoose;
 
@@ -63,8 +64,8 @@ const mongoSchema = new Schema({
 });
 
 class ChapterClass {
-  static async getBySlug({ bookSlug, chapterSlug, user }) {
-    const book = await Book.getBySlug({ slug: bookSlug, user });
+  static async getBySlug({ bookSlug, chapterSlug }) {
+    const book = await Book.getBySlug({ slug: bookSlug });
     if (!book) {
       throw new Error('Not found');
     }
@@ -75,7 +76,7 @@ class ChapterClass {
       throw new Error('Not found');
     }
 
-    const chapterObj = chapter.toObject;
+    const chapterObj = chapter.toObject();
     chapterObj.book = book;
 
     return chapterObj;
@@ -90,3 +91,6 @@ mongoSchema.loadClass(ChapterClass);
 const Chapter = mongoose.model('Chapter', mongoSchema);
 
 module.exports = Chapter;
+
+// to work around circular dependencies
+const Book = require('./Book');

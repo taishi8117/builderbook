@@ -1,8 +1,10 @@
+/* eslint-disable no-use-before-define */
 const mongoose = require('mongoose');
 const generateSlug = require('../utils/slugify');
-const Chapter = require('./Chapter');
 
 const { Schema } = mongoose;
+
+// const Chapter = require('./Chapter');
 
 const mongoSchema = new Schema({
   name: {
@@ -48,9 +50,9 @@ class BookClass {
 
     const book = bookDoc.toObject();
 
-    book.chapters = (await Chapter.find({ bookId: book._id }, 'title slug'))
-      .sort({ order: 1 })
-      .map((chapter) => chapter.toObject());
+    book.chapters = (
+      await Chapter.find({ bookId: book._id }, 'title slug').sort({ order: 1 })
+    ).map((chapter) => chapter.toObject());
     return book;
   }
 
@@ -97,3 +99,6 @@ mongoSchema.loadClass(BookClass);
 const Book = mongoose.model('Book', mongoSchema);
 
 module.exports = Book;
+
+// work around circular dependencies
+const Chapter = require('./Chapter');
