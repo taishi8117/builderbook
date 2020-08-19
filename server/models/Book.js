@@ -84,7 +84,7 @@ class BookClass {
     const modifier = { price, githubRepo };
     if (name !== book.name) {
       modifier.name = name;
-      modifier.slug = await await generateSlug(this, name);
+      modifier.slug = await generateSlug(this, name);
     }
 
     const editedBook = await this.findOneAndUpdate(
@@ -130,7 +130,7 @@ class BookClass {
           return;
         }
 
-        if (f.path !== 'introduction.md' && !/chapter-(\[0-9]+)\.md/.test(f.path)) {
+        if (f.path !== 'introduction.md' && !/chapter-([0-9]+)\.md/.test(f.path)) {
           // not chapter content, skip
           return;
         }
@@ -154,7 +154,7 @@ class BookClass {
       }),
     );
 
-    return book.update({ githubLastCommitSha: lastCommitSha });
+    return book.updateOne({ githubLastCommitSha: lastCommitSha });
   }
 }
 
