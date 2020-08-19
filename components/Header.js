@@ -41,8 +41,16 @@ const optionsMenuAdmin = [
   },
 ];
 
-const Header = ({ user }) => (
-  <div>
+const Header = ({ user, hideHeader }) => (
+  <div
+    style={{
+      overflow: 'hidden',
+      position: 'relative',
+      display: 'block',
+      top: hideHeader ? '-64px' : '0px',
+      transition: 'top 0.5s ease-in',
+    }}
+  >
     <Toolbar style={styleToolbar}>
       <Grid container direction="row" justify="space-around" align="center">
         <Grid item sm={9} xs={8} style={{ textAlign: 'left' }}>
@@ -97,10 +105,12 @@ Header.propTypes = {
     avatarUrl: PropTypes.string,
     displayName: PropTypes.string,
   }),
+  hideHeader: PropTypes.bool,
 };
 
 Header.defaultProps = {
   user: null,
+  hideHeader: false,
 };
 
 export default Header;
