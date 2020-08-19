@@ -8,6 +8,8 @@ const logger = require('./logs');
 const auth = require('./google');
 const api = require('./api');
 const { insertTemplates } = require('./models/EmailTemplate');
+const routesWithSlug = require('./routesWithSlug');
+const { setupGithub } = require('./github');
 
 require('dotenv').config();
 
@@ -31,11 +33,13 @@ const handle = app.getRequestHandler();
 
 const URL_MAP = {
   '/login': '/public/login',
+  '/my-books': '/customer/my-books',
 };
 
 app.prepare().then(async () => {
   const server = express();
 
+  server.use(express.json());
   const MongoStore = mongoSessionStore(session);
 
   const sess = {
@@ -54,14 +58,13 @@ app.prepare().then(async () => {
   };
 
   server.use(session(sess));
-  await insertTemplates();
-  auth({ server, ROOT_URL });
-  api(server);
 
-  server.get('/books/:bookSlug/:chapterSlug', (req, res) => {
-    const { bookSlug, chapterSlug } = req.params;
-    app.render(req, res, '/public/read-chapter', { bookSlug, chapterSlug });
-  });
+  await insertTemplates();
+
+  auth({ server, ROOT_URL });
+  setupGithub({ server });
+  api(server);
+  routesWithSlug({ server, app });
 
   server.get('*', (req, res) => {
     const url = URL_MAP[req.path];
