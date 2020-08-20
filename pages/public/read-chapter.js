@@ -6,6 +6,7 @@ import Link from 'next/link';
 import throttle from 'lodash/throttle';
 import isEqual from 'lodash/isEqual';
 import Header from '../../components/Header';
+import BuyButton from '../../components/customer/BuyButton';
 
 import { getChapterDetail } from '../../lib/api/public';
 import withAuth from '../../lib/withAuth';
@@ -35,8 +36,10 @@ class ReadChapter extends React.Component {
     const { chapter } = props;
 
     let htmlContent = '';
-    if (chapter) {
+    if (chapter && (chapter.isPurchased || chapter.isFree)) {
       htmlContent = chapter.htmlContent;
+    } else {
+      htmlContent = chapter.htmlExcerpt;
     }
 
     this.state = {
@@ -64,7 +67,12 @@ class ReadChapter extends React.Component {
 
     if (chapter && chapter._id !== this.props.chapter._id) {
       document.getElementById('chapter-content').scrollIntoView();
-      const { htmlContent } = chapter;
+      let htmlContent = '';
+      if (chapter && (chapter.isPurchased || chapter.isFree)) {
+        htmlContent = chapter.htmlContent;
+      } else {
+        htmlContent = chapter.htmlExcerpt;
+      }
       this.setState({ chapter, htmlContent });
     }
   }
@@ -148,7 +156,9 @@ class ReadChapter extends React.Component {
   };
 
   renderMainContent() {
+    const { user } = this.props;
     const { chapter, htmlContent, showTOC, isMobile } = this.state;
+    const { book } = chapter;
 
     let padding = '20px 20%';
 
@@ -168,6 +178,7 @@ class ReadChapter extends React.Component {
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: htmlContent }}
         />
+        {!chapter.isPurchased && !chapter.isFree ? <BuyButton user={user} book={book} /> : null}
       </div>
     );
   }

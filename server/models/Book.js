@@ -5,7 +5,14 @@ const generateSlug = require('../utils/slugify');
 const { getCommits, getContent } = require('../github');
 const logger = require('../logs');
 
+const Purchase = require('./Purchase');
+const getEmailTemplate = require('./EmailTemplate');
+const { stripeCharge } = require('../stripe');
+const sendEmail = require('../aws');
+
 const { Schema } = mongoose;
+
+const ROOT_URL = 'http://localhost:8000';
 
 // const Chapter = require('./Chapter');
 
@@ -155,6 +162,54 @@ class BookClass {
     );
 
     return book.updateOne({ githubLastCommitSha: lastCommitSha });
+  }
+
+  static async buy({ id, user, stripeToken }) {
+    if (!user) {
+      throw new Error('User required');
+    }
+
+    const book = await this.findById(id, 'name slug price');
+    if (!book) {
+      throw new Error('Book not found');
+    }
+
+    const isPurchased =
+      (await isPurchased.find({ userId: user._id, bookId: id }).countDocuments()) > 0;
+    if (isPurchased) {
+      throw new Error('Already bought this book');
+    }
+
+    const chargeObj = await stripeCharge({
+      amount: book.price * 100,
+      token: stripeToken.id,
+      buyerEmail: user.email,
+    });
+
+    const template = await getEmailTemplate('purchase', {
+      userName: user.displayName,
+      bookTitle: book.name,
+      bookUrl: `${ROOT_URL}/books/${book.slug}/introduction`,
+    });
+
+    try {
+      await sendEmail({
+        from: `Kelly from builderbook.org <${process.env.EMAIL_SUPPORT_FROM_ADDRESS}>`,
+        to: [user.email],
+        subject: template.subject,
+        body: template.message,
+      });
+    } catch (error) {
+      logger.error('Email sending error:', error);
+    }
+
+    return Purchase.create({
+      userId: user._id,
+      bookId: book._id,
+      amount: book.price * 100,
+      stripeCharge: chargeObj,
+      createdAt: new Date(),
+    });
   }
 }
 
