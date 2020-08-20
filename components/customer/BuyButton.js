@@ -53,6 +53,7 @@ class BuyButton extends React.Component {
 
     try {
       await buyBook({ stripeToken: token, id: book._id });
+      window.location.reload(true);
       notify('Success!');
       NProgress.done();
     } catch (err) {
@@ -67,7 +68,8 @@ class BuyButton extends React.Component {
     const { user } = this.props;
 
     if (!user) {
-      window.location.href = '/auth/google';
+      const redirectUrl = `${window.location.pathname}?buy=1`;
+      window.location.href = `/auth/google?redirectUrl=${redirectUrl}`;
     }
   };
 
@@ -107,8 +109,7 @@ class BuyButton extends React.Component {
         desktopShowModal={showModal || null}
       >
         <Button variant="contained" style={styleBuyButton} color="primary">
-          Buy for $
-{book.price}
+          Buy for $ {book.price}
         </Button>
       </StripeCheckout>
     );

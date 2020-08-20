@@ -5,6 +5,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import throttle from 'lodash/throttle';
 import isEqual from 'lodash/isEqual';
+import { withRouter } from 'next/router';
 import Header from '../../components/Header';
 import BuyButton from '../../components/customer/BuyButton';
 
@@ -23,6 +24,13 @@ class ReadChapter extends React.Component {
       _id: PropTypes.string.isRequired,
       htmlContent: PropTypes.string,
     }),
+    user: PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+    router: PropTypes.shape({
+      asPath: PropTypes.string.isRequired,
+    }).isRequired,
+    showStripeModal: PropTypes.bool.isRequired,
   };
 
   static defaultProps = {
@@ -144,7 +152,9 @@ class ReadChapter extends React.Component {
 
     const chapter = await getChapterDetail({ bookSlug, chapterSlug }, { headers });
 
-    return { chapter };
+    const showStripeModal = req ? !!req.query.buy : window.location.search.includes('buy=1');
+
+    return { chapter, showStripeModal };
   }
 
   toggleChapterList = () => {
@@ -156,7 +166,7 @@ class ReadChapter extends React.Component {
   };
 
   renderMainContent() {
-    const { user } = this.props;
+    const { user, showStripeModal } = this.props;
     const { chapter, htmlContent, showTOC, isMobile } = this.state;
     const { book } = chapter;
 
@@ -178,7 +188,9 @@ class ReadChapter extends React.Component {
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: htmlContent }}
         />
-        {!chapter.isPurchased && !chapter.isFree ? <BuyButton user={user} book={book} /> : null}
+        {!chapter.isPurchased && !chapter.isFree ? (
+          <BuyButton user={user} book={book} showModal={showStripeModal} />
+        ) : null}
       </div>
     );
   }
@@ -264,7 +276,7 @@ class ReadChapter extends React.Component {
   }
 
   render() {
-    const { user } = this.props;
+    const { user, router } = this.props;
     const { chapter, showTOC, hideHeader, isMobile } = this.state;
 
     if (!chapter) {
@@ -289,7 +301,7 @@ class ReadChapter extends React.Component {
           ) : null}
         </Head>
 
-        <Header user={user} hideHeader={hideHeader} />
+        <Header user={user} hideHeader={hideHeader} redirectUrl={router.asPath} />
 
         {this.renderSidebar()}
 
@@ -334,4 +346,4 @@ class ReadChapter extends React.Component {
   }
 }
 
-export default withAuth(ReadChapter, { loginRequired: false });
+export default withAuth(withRouter(ReadChapter), { loginRequired: false });

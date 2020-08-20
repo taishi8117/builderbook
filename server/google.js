@@ -62,14 +62,19 @@ function auth({ ROOT_URL, server }) {
   server.use(passport.session());
 
   // Express routes
-  server.get(
-    '/auth/google',
+  server.get('/auth/google', (req, res, next) => {
+    if (req.query && req.query.redirectUrl && req.query.redirectUrl.startsWith('/')) {
+      req.session.finalUrl = req.query.redirectUrl;
+    } else {
+      req.session.finalUrl = null;
+    }
+
     passport.authenticate('google', {
       // 1. options such as scope and prompt
       scope: ['profile', 'email'],
       prompt: 'select_account',
-    }),
-  );
+    })(req, res, next);
+  });
 
   server.get(
     '/oauth2callback',
@@ -78,6 +83,8 @@ function auth({ ROOT_URL, server }) {
       // 2. if successful, redirect user to Index page (`/`)
       if (req.user && req.user.isAdmin) {
         res.redirect('/admin');
+      } else if (req.session.finalUrl) {
+        res.redirect(req.session.finalUrl);
       } else {
         res.redirect('/my-books');
       }

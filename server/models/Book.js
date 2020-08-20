@@ -9,6 +9,7 @@ const Purchase = require('./Purchase');
 const getEmailTemplate = require('./EmailTemplate');
 const { stripeCharge } = require('../stripe');
 const sendEmail = require('../aws');
+const User = require('./User');
 
 const { Schema } = mongoose;
 
@@ -186,6 +187,8 @@ class BookClass {
       buyerEmail: user.email,
     });
 
+    User.findByIdAndUpdate(user.id, { $addToSet: { purchasedBookIds: book.id } }).exec();
+
     const template = await getEmailTemplate('purchase', {
       userName: user.displayName,
       bookTitle: book.name,
@@ -210,6 +213,13 @@ class BookClass {
       stripeCharge: chargeObj,
       createdAt: new Date(),
     });
+  }
+
+  static async getPurchasedBooks({ purchasedBookIds }) {
+    const purchasedBooks = await this.find({ _id: { $in: purchasedBookIds } }).sort({
+      createdAt: -1,
+    });
+    return { purchasedBooks };
   }
 }
 
